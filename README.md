@@ -1,10 +1,10 @@
 <?php
 
 // Set up your bot token
-$botToken = 'YOUR_BOT_TOKEN';
+$botToken = '5743428061:AAEXK13NbHACvzsW9DsZ334KP8Qm-67ugMg';
 
 // Create a new Telegram bot instance
-$bot = new TelegramBotAPI($botToken);
+$bot = new TelegramBotAPI($5743428061:AAEXK13NbHACvzsW9DsZ334KP8Qm-67ugMg);
 
 // Get updates from Telegram
 $update = $bot->getWebhookUpdate();
