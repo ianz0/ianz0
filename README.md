@@ -1,58 +1,45 @@
-import os
-import img2pdf
-from telegram.ext import Updater, MessageHandler, Filters
+<?php
 
-# تعيين توكن البوت الخاص بك
-TOKEN = '5743428061:AAEXK13NbHACvzsW9DsZ334KP8Qm-67ugMg'
+// تضمين ملف الكلاسات الخاص بالبوت
+require 'vendor/autoload.php';
 
-# تعيين المسار المؤقت لحفظ الصور المستلمة
-TEMP_DIR = 'temp'
+use Telegram\Bot\Api;
 
-# إعداد المسار المؤقت
-os.makedirs(TEMP_DIR, exist_ok=True)
+// تعيين توكن البوت الخاص بك
+$token = 'YOUR_BOT_TOKEN';
 
+// إنشاء كائن من البوت
+$telegram = new Api($token);
 
-def convert_image_to_pdf(image_path, pdf_path):
-    # تحويل الصورة إلى ملف PDF
-    with open(pdf_path, "wb") as f:
-        f.write(img2pdf.convert(image_path))
+// استلام تحديثات التيليجرام
+$updates = $telegram->getWebhookUpdates();
 
+// استجابة للرسائل المستلمة
+foreach ($updates as $update) {
+    $message = $update->getMessage();
+    $chatId = $message->getChat()->getId();
+    $text = $message->getText();
 
-def handle_image(update, context):
-    # استلام الصورة المرسلة من المستخدم
-    photo = update.message.photo[-1]
-    file_id = photo.file_id
-    file_path = context.bot.get_file(file_id).file_path
-    image_path = os.path.join(TEMP_DIR, f'{file_id}.jpg')
-    pdf_path = os.path.join(TEMP_DIR, f'{file_id}.pdf')
-
-    # تنزيل الصورة وحفظها مؤقتًا
-    context.bot.get_file(file_id).download(image_path)
-
-    # تحويل الصورة إلى ملف PDF
-    convert_image_to_pdf(image_path, pdf_path)
-
-    # إرسال الملف PDF إلى المستخدم
-    context.bot.send_document(
-        chat_id=update.message.chat_id,
-        document=open(pdf_path, 'rb'),
-    )
-
-    # حذف الملفات المؤقتة
-    os.remove(image_path)
-    os.remove(pdf_path)
-
-
-def main():
-    # إعداد محرك التحديث وتعيين المعالج الخاص بالصور
-    updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
-    dp.add_handler(MessageHandler(Filters.photo, handle_image))
-
-    # بدء تشغيل البوت
-    updater.start_polling()
-    updater.idle()
-
-
-if __name__ == '__main__':
-    main()
+    if ($text === '/start') {
+        $telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' => 'مرحبًا بك في بوت تلكرام!'
+        ]);
+    } elseif ($text === '/hello') {
+        $telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' => 'مرحبًا، كيف يمكنني مساعدتك؟'
+        ]);
+    } elseif ($text === '/date') {
+        $date = date('Y-m-d');
+        $telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' => 'التاريخ الحالي هو: ' . $date
+        ]);
+    } else {
+        $telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' => 'عذرًا، لم أتمكن من فهم طلبك.'
+        ]);
+    }
+}
