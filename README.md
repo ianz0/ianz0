@@ -1,49 +1,58 @@
-<?php
+import os
+import img2pdf
+from telegram.ext import Updater, MessageHandler, Filters
 
-// Set up your bot token
-$botToken = '5743428061:AAEXK13NbHACvzsW9DsZ334KP8Qm-67ugMg';
+# تعيين توكن البوت الخاص بك
+TOKEN = 'YOUR_BOT_TOKEN'
 
-// Create a new Telegram bot instance
-$bot = new TelegramBotAPI($5743428061:AAEXK13NbHACvzsW9DsZ334KP8Qm-67ugMg);
+# تعيين المسار المؤقت لحفظ الصور المستلمة
+TEMP_DIR = 'temp'
 
-// Get updates from Telegram
-$update = $bot->getWebhookUpdate();
+# إعداد المسار المؤقت
+os.makedirs(TEMP_DIR, exist_ok=True)
 
-// Process the received message
-if ($update->getMessage()) {
-    $message = $update->getMessage();
-    $chatId = $message->getChat()->getId();
-    $text = $message->getText();
 
-    if ($text === '/start') {
-        $bot->sendMessage($chatId, 'Welcome to the Resume Bot! Please provide your details.');
-    } elseif ($text === '/resume') {
-        $bot->sendMessage($chatId, 'Please enter your name:');
-    } elseif ($text === '/cancel') {
-        $bot->sendMessage($chatId, 'Operation canceled.');
-    } elseif ($text !== '') {
-        // Store the user's details
-        $name = $text;
+def convert_image_to_pdf(image_path, pdf_path):
+    # تحويل الصورة إلى ملف PDF
+    with open(pdf_path, "wb") as f:
+        f.write(img2pdf.convert(image_path))
 
-        $bot->sendMessage($chatId, 'Please enter your skills:');
-    } else {
-        // Handle other steps and store the user's information accordingly
-        // ...
-        // Once all the necessary details are collected, generate the resume PDF
-        // using FPDF library
-        $pdf = new FPDF();
-        $pdf->AddPage();
-        $pdf->SetFont('Arial', 'B', 16);
-        $pdf->Cell(0, 10, 'Resume', 0, 1, 'C');
-        $pdf->SetFont('Arial', '', 12);
-        $pdf->Cell(0, 10, 'Name: ' . $name, 0, 1);
-        $pdf->Cell(0, 10, 'Skills: ' . $skills, 0, 1);
-        // Add more sections as needed
 
-        // Save the PDF
-        $pdf->Output('resume.pdf', 'F');
+def handle_image(update, context):
+    # استلام الصورة المرسلة من المستخدم
+    photo = update.message.photo[-1]
+    file_id = photo.file_id
+    file_path = context.bot.get_file(file_id).file_path
+    image_path = os.path.join(TEMP_DIR, f'{file_id}.jpg')
+    pdf_path = os.path.join(TEMP_DIR, f'{file_id}.pdf')
 
-        // Send the generated PDF to the user
-        $bot->sendDocument($chatId, 'resume.pdf', 'Here is your resume in PDF format.');
-    }
-}
+    # تنزيل الصورة وحفظها مؤقتًا
+    context.bot.get_file(file_id).download(image_path)
+
+    # تحويل الصورة إلى ملف PDF
+    convert_image_to_pdf(image_path, pdf_path)
+
+    # إرسال الملف PDF إلى المستخدم
+    context.bot.send_document(
+        chat_id=update.message.chat_id,
+        document=open(pdf_path, 'rb'),
+    )
+
+    # حذف الملفات المؤقتة
+    os.remove(image_path)
+    os.remove(pdf_path)
+
+
+def main():
+    # إعداد محرك التحديث وتعيين المعالج الخاص بالصور
+    updater = Updater(TOKEN, use_context=True)
+    dp = updater.dispatcher
+    dp.add_handler(MessageHandler(Filters.photo, handle_image))
+
+    # بدء تشغيل البوت
+    updater.start_polling()
+    updater.idle()
+
+
+if __name__ == '__main__':
+    main()
