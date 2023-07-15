@@ -3,7 +3,7 @@ import img2pdf
 from telegram.ext import Updater, MessageHandler, Filters
 
 # تعيين توكن البوت الخاص بك
-TOKEN = 'YOUR_BOT_TOKEN'
+TOKEN = '5743428061:AAEXK13NbHACvzsW9DsZ334KP8Qm-67ugMg'
 
 # تعيين المسار المؤقت لحفظ الصور المستلمة
 TEMP_DIR = 'temp'
